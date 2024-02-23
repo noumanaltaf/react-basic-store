@@ -95,21 +95,25 @@ const Home = () => {
         setSelectedSortType(value);
     }
 
-    const handleChangeRating = (id: number, rating: number) => {
+    const handleChangeRating = async (id: number, rating: number) => {
 
-        const product = products.find((p) => Number(p.id) === Number(id)) as Product;
-        const index = products.findIndex((p) => Number(p.id) === Number(product.id));
-        const cloneProducts = [...products];
-        cloneProducts.splice(index, 1, { ...product, rating });
+        try {
+            const product = products.find((p) => Number(p.id) === Number(id)) as Product;
+            const index = products.findIndex((p) => Number(p.id) === Number(product.id));
+            const cloneProducts = [...products];
+            cloneProducts.splice(index, 1, { ...product, rating });
 
-        updateProduct({
-            ...product,
-            rating
-        });
-        dispatch({
-            type: ProductsActionTypes.fetchProductsSuccess,
-            payload: cloneProducts
-        })
+            await updateProduct({
+                ...product,
+                rating
+            }).catch((err) => console.warn(err));
+            dispatch({
+                type: ProductsActionTypes.fetchProductsSuccess,
+                payload: cloneProducts
+            })
+        } catch (err) {
+            console.warn(err)
+        }
     }
 
     return (

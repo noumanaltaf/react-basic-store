@@ -8,6 +8,7 @@ import { useAuth } from '../utils/hooks';
 import { useDispatch, useSelector } from 'react-redux';
 import { Product, ProductsActionTypes } from '../reducers/products';
 import { AppState } from '../store';
+import { convertImageToBase64 } from '../utils/helper';
 
 const AdminHome = () => {
     const { hasLoginToken, logout } = useAuth();
@@ -66,23 +67,31 @@ const AdminHome = () => {
     }
 
     const handleAddProduct = async (type: 'edit' | 'add', product: any) => {
-        if (type === 'edit') {
-            await updateProduct(product);
-            const index = products.findIndex((p) => Number(p.id) === Number(product.id));
-            const cloneProducts = [...products];
-            cloneProducts.splice(index, 1, product); 
+        try {
+            if (type === 'edit') {
+                await updateProduct(product);
+                const index = products.findIndex((p) => Number(p.id) === Number(product.id));
+                const cloneProducts = [...products];
+                cloneProducts.splice(index, 1, product);
 
-            dispatch({
-                type: ProductsActionTypes.fetchProductsSuccess,
-                payload: cloneProducts
-            });
-        } else {
-            const newProducts = [...products, product];
-            dispatch({
-                type: ProductsActionTypes.fetchProductsSuccess,
-                payload: newProducts
-            });
-            addProduct(product);
+                dispatch({
+                    type: ProductsActionTypes.fetchProductsSuccess,
+                    payload: cloneProducts
+                });
+            } else {
+                const convertedImage = await convertImageToBase64(product.image);
+                const lastProductId = Number(products?.[products.length - 1]?.id ?? 0);
+                const newProduct = { id: lastProductId + 1, ...product, image: convertedImage };
+                const newProducts = [...products, newProduct];
+                dispatch({
+                    type: ProductsActionTypes.fetchProductsSuccess,
+                    payload: newProducts
+                });
+
+                await addProduct(newProduct);
+            }
+        } catch (err) {
+            console.warn(err);
         }
     }
 
@@ -92,12 +101,16 @@ const AdminHome = () => {
     }
 
     const handleProductDelete = async (id: number) => {
-        await deleteProduct(id);
-        const filterDeletedProducts = products.filter((p) => Number(p.id) !== Number(id));
-        dispatch({
-            type: ProductsActionTypes.fetchProductsSuccess,
-            payload: filterDeletedProducts
-        })
+        try {
+            await deleteProduct(id)
+            const filterDeletedProducts = products.filter((p) => Number(p.id) !== Number(id));
+            dispatch({
+                type: ProductsActionTypes.fetchProductsSuccess,
+                payload: filterDeletedProducts
+            })
+        } catch (err) {
+            console.warn(err)
+        }
     }
 
     return (
