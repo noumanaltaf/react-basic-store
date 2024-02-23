@@ -69,7 +69,6 @@ const AdminHome = () => {
     const handleAddProduct = async (type: 'edit' | 'add', product: any) => {
         try {
             if (type === 'edit') {
-                await updateProduct(product);
                 const index = products.findIndex((p) => Number(p.id) === Number(product.id));
                 const cloneProducts = [...products];
                 cloneProducts.splice(index, 1, product);
@@ -78,6 +77,7 @@ const AdminHome = () => {
                     type: ProductsActionTypes.fetchProductsSuccess,
                     payload: cloneProducts
                 });
+                await updateProduct(product);
             } else {
                 const convertedImage = await convertImageToBase64(product.image);
                 const lastProductId = Number(products?.[products.length - 1]?.id ?? 0);

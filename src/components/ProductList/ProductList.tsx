@@ -1,9 +1,9 @@
 import React from 'react';
 import Grid from '@mui/material/Grid';
 import ProductCard from '../ProductCard';
-import List from '@mui/material/List/List';
 import ListItem from '@mui/material/ListItem';
 import { Product } from '../../reducers/products';
+import { ListStyled } from './ProductList.styles';
 
 interface IProductList {
     products: Product[];
@@ -16,13 +16,13 @@ interface IProductList {
 const ProductList = ({ products, isAdmin, onChangeRating, onProductEdit, onProductDelete }: IProductList) => {
 
     return isAdmin ? (
-        <List>
+        <ListStyled>
             {products?.map((product) => (
                 <ListItem>
                     <ProductCard product={product} isAdmin={isAdmin} onEdit={onProductEdit} onDelete={onProductDelete} />
                 </ListItem>
             ))}
-        </List>
+        </ListStyled>
     ) : (
         <Grid container spacing={2} padding={'3rem'}>
             {products?.map((product) => (
