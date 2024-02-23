@@ -7,16 +7,23 @@ import Box from '@mui/material/Box';
 import { fetchAllCategories, fetchProducts, updateProduct } from '../api/products';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../utils/hooks';
-import { Product } from '../reducers/products';
+import { Product, ProductsActionTypes } from '../reducers/products';
+import { useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { AppState } from '../store';
 
 const Home = () => {
     const { logout } = useAuth();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
-    const [products, setProducts] = React.useState<Product[]>([]);
-    const [categories, setCategories] = React.useState([]);
+    const products = useSelector<AppState>(state => state.products.products) as Product[];
+    const categories = useSelector<AppState>(state => state.products.categories) as string[];
+
+
     const [selectedSortType, setSelectedSortType] = React.useState<number>()
     const [selectedFilterCategories, setSelectedFilterCategories] = React.useState<string[]>([]);
+
     const filteredAndSortedProducts = React.useMemo(() => {
 
         const whichHasSelectedCategory = (p: Product) => selectedFilterCategories.some((c) => c === p.category);
@@ -44,23 +51,33 @@ const Home = () => {
         return soortedPProducts;
     }, [selectedFilterCategories, products, selectedSortType]);
 
+    const fetchProductsAndCat = () => {
+        fetchProducts()
+            .then((resp) => {
+                if (resp.status) {
+                    dispatch({
+                        type: ProductsActionTypes.fetchProductsSuccess,
+                        payload: resp.data
+                    });
+                }
+            })
+            .catch((err) => console.log(err));
+
+        fetchAllCategories()
+            .then((resp) => {
+                if (resp.status) {
+                    dispatch({
+                        type: ProductsActionTypes.fetchCategoriesSuccess,
+                        payload: resp.data
+                    });
+                }
+            })
+            .catch((err) => console.log(err));
+    }
+
     React.useEffect(
         () => {
-            fetchProducts()
-                .then((resp) => {
-                    if (resp.status) {
-                        setProducts(resp.data);
-                    }
-                })
-                .catch((err) => console.log(err));
-
-            fetchAllCategories()
-                .then((resp) => {
-                    if (resp.status) {
-                        setCategories(resp.data);
-                    }
-                })
-                .catch((err) => console.log(err));
+            fetchProductsAndCat();
         },
         []
     );
@@ -81,10 +98,18 @@ const Home = () => {
     const handleChangeRating = (id: number, rating: number) => {
 
         const product = products.find((p) => Number(p.id) === Number(id)) as Product;
+        const index = products.findIndex((p) => Number(p.id) === Number(product.id));
+        const cloneProducts = [...products];
+        cloneProducts.splice(index, 1, { ...product, rating });
+
         updateProduct({
             ...product,
             rating
         });
+        dispatch({
+            type: ProductsActionTypes.fetchProductsSuccess,
+            payload: cloneProducts
+        })
     }
 
     return (

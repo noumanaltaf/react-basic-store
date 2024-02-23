@@ -57,7 +57,7 @@ const AdminHome = () => {
         () => {
             fetchProductsAndCat();
         },
-        [navigate]
+        []
     );
 
     const handleLogout = () => {
@@ -65,10 +65,23 @@ const AdminHome = () => {
         navigate('/admin-login');
     }
 
-    const handleAddProduct = (type: 'edit' | 'add', product: any) => {
+    const handleAddProduct = async (type: 'edit' | 'add', product: any) => {
         if (type === 'edit') {
-            updateProduct(product);
+            await updateProduct(product);
+            const index = products.findIndex((p) => Number(p.id) === Number(product.id));
+            const cloneProducts = [...products];
+            cloneProducts.splice(index, 1, product); 
+
+            dispatch({
+                type: ProductsActionTypes.fetchProductsSuccess,
+                payload: cloneProducts
+            });
         } else {
+            const newProducts = [...products, product];
+            dispatch({
+                type: ProductsActionTypes.fetchProductsSuccess,
+                payload: newProducts
+            });
             addProduct(product);
         }
     }
@@ -78,9 +91,13 @@ const AdminHome = () => {
         setSelectedEditProduct(products.find((p) => Number(p.id) === Number(id)) as any)
     }
 
-    const handleProductDelete = (id: number) => {
-        deleteProduct(id);
-        fetchProductsAndCat();
+    const handleProductDelete = async (id: number) => {
+        await deleteProduct(id);
+        const filterDeletedProducts = products.filter((p) => Number(p.id) !== Number(id));
+        dispatch({
+            type: ProductsActionTypes.fetchProductsSuccess,
+            payload: filterDeletedProducts
+        })
     }
 
     return (
